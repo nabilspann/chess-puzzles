@@ -10,8 +10,11 @@ generator client {
     provider = "prisma-client-js"
 }
 
-model Example {
+model Puzzle {
     id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    fen       String
+    difficulty String
+    pgn     String
+    
+    @@index([difficulty])
 }
