@@ -1,12 +1,16 @@
 import Head from "next/head";
-import Link from "next/link";
 import { api } from "~/utils/api";
+import { ChessBoardComp } from "~/components/ChessBoard";
+import { useState } from "react";
 
 export default function Home() {
-  
-  const { data } = api.puzzles.getOne.useQuery({difficulty: 'hard'});
+  // const [move, setMove] = useState('');
+  // const { data } = api.puzzles.getOne.useQuery({difficulty: 'hard'});
+  // const handleChange = (event) => {
+  //   setMove(event.target.value);
+  // }
 
-  console.log('data', data);
+  // console.log('move', move);
   return (
     <>
       <Head>
@@ -15,7 +19,18 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen justify-center">
-        <div className="h-full w-full md:max-w-4xl border-x p-4">test</div>
+        <div className="h-full w-full overflow-y-scroll border-x border-slate-400 md:max-w-2xl">
+          {/* <input
+            className="grow bg-transparent outline-none"
+            type="text"
+            value={move}
+            onChange={handleChange}
+          /> */}
+          <ChessBoardComp
+          // pushMove={move}
+          />
+        </div>
+        {/* <button >MOVE</button> */}
       </main>
     </>
   );
