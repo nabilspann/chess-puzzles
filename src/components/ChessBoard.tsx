@@ -1,22 +1,29 @@
 import { Chess } from "chess.js";
 import type { Square, PieceType, ShortMove, Move } from "chess.js";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 
 type SingleMove = ShortMove | string;
 type MoveResult = Move | null;
-interface PropType {
-  pushMove?: SingleMove
+interface PropTypes {
+  pushMove?: SingleMove,
+  validateMove?: (san: string) => boolean,
+  fen?: string,
 }
 
-export const ChessBoardComp = ({ pushMove }: PropType) => {
-    const [game, setGame] = useState(new Chess());
+const ChessBoardComp = ({ pushMove, validateMove = () => true, fen }: PropTypes) => {
+    const [game, setGame] = useState(new Chess(fen));
 
     useEffect(() => {
-      if(pushMove) {
+      if (pushMove) {
         makeAMove(pushMove);
       }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pushMove]);
+
+    useEffect(() => {
+      game.load(fen);
+    }, [fen]);
 
     const makeAMove = (nextMove: SingleMove): MoveResult => {
       const gameCopy = { ...game };
@@ -30,7 +37,6 @@ export const ChessBoardComp = ({ pushMove }: PropType) => {
       targetSquare: Square,
       piece: string
     ) => {
-      // const gameCopy = { ...game };
       const selectedPiece = piece[1];
 
       if (!selectedPiece) {
@@ -46,19 +52,15 @@ export const ChessBoardComp = ({ pushMove }: PropType) => {
         >,
       });
 
-      // const move = gameCopy.move({
-      //   from: sourceSquare,
-      //   to: targetSquare,
-      //   promotion:(selectedPiece.toLowerCase() ?? 'q') as Exclude<PieceType, 'p' | 'k'>,
-      // });
-
       if (move === null) return false;
-      return true;
+      return validateMove(move.san);
     };
 
     return (
-      <div className="h-full w-full border-x p-4 md:max-w-4xl">
+      <div className="h-full w-full pb-4 pt-10 md:max-w-4xl">
         <Chessboard onPieceDrop={onDrop} position={game.fen()} />
       </div>
     );
 }
+
+export default memo(ChessBoardComp);

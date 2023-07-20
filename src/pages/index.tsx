@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { api } from "~/utils/api";
-import { ChessBoardComp } from "~/components/ChessBoard";
 import { useState } from "react";
+import StartPuzzle from "./StartPuzzle";
 
 export default function Home() {
   // const [move, setMove] = useState('');
@@ -19,16 +19,14 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen justify-center">
-        <div className="h-full w-full overflow-y-scroll border-x border-slate-400 md:max-w-2xl">
+        <div className="h-full w-full overflow-y-scroll md:max-w-2xl">
           {/* <input
             className="grow bg-transparent outline-none"
             type="text"
             value={move}
             onChange={handleChange}
           /> */}
-          <ChessBoardComp
-          // pushMove={move}
-          />
+          <StartPuzzle />
         </div>
         {/* <button >MOVE</button> */}
       </main>
