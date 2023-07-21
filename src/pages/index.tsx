@@ -4,6 +4,24 @@ import { useState } from "react";
 import StartPuzzle from "./StartPuzzle";
 
 export default function Home() {
+  // api.puzzles.getOne.useQuery(
+  //   { difficulty: 'easy' },
+  //   {
+  //     refetchOnWindowFocus: false,
+  //   }
+  // );
+  //  api.puzzles.getOne.useQuery(
+  //    { difficulty: "medium" },
+  //    {
+  //      refetchOnWindowFocus: false,
+  //    }
+  //  );
+  //   api.puzzles.getOne.useQuery(
+  //     { difficulty: "hard" },
+  //     {
+  //       refetchOnWindowFocus: false,
+  //     }
+  //   );
   // const [move, setMove] = useState('');
   // const { data } = api.puzzles.getOne.useQuery({difficulty: 'hard'});
   // const handleChange = (event) => {
@@ -11,6 +29,7 @@ export default function Home() {
   // }
 
   // console.log('move', move);
+  console.log("test?")
   return (
     <>
       <Head>
