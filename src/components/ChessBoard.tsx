@@ -1,38 +1,43 @@
 import { Chess } from "chess.js";
-import type { Square, PieceType, ShortMove, Move } from "chess.js";
+import type { Square, PieceType, ShortMove, Move, ChessInstance } from "chess.js";
 import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
+import type { SingleMove } from "~/interfaces";
 
-type SingleMove = ShortMove | string;
-type MoveResult = Move | null;
-interface PropTypes {
-  pushMove?: SingleMove,
-  validateMove?: (san: string) => boolean,
-  fen?: string,
+interface MoveResult {
+  move: Move | null,
+  gameCopy: ChessInstance
 }
 
-const ChessBoardComp = ({ pushMove, validateMove = () => true, fen }: PropTypes) => {
+interface PropTypes {
+  pushMove?: SingleMove | null,
+  validateMove?: (san: string) => boolean,
+  fen?: string,
+  boardOrientation: "white" | "black"
+}
+
+const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrientation }: PropTypes) => {
   const [game, setGame] = useState(new Chess(fen));
-  const boardOrientation = game.fen().split(' ')[1] === "b" ? "black" : "white";
 
   useEffect(() => {
     if (pushMove) {
-      makeAMove(pushMove);
+      const { gameCopy } = makeAMove(pushMove);
+      setGame(gameCopy);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pushMove]);
 
   useEffect(() => {
-    if(fen){
+    if (fen) {
       game.load(fen);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fen]);
 
   const makeAMove = (nextMove: SingleMove): MoveResult => {
     const gameCopy = { ...game };
-    const result = gameCopy.move(nextMove);
-    setGame(gameCopy);
-    return result;
+    const move = gameCopy.move(nextMove);
+    return { move, gameCopy };
   };
 
   const onDrop = (
@@ -46,7 +51,7 @@ const ChessBoardComp = ({ pushMove, validateMove = () => true, fen }: PropTypes)
       return false;
     }
 
-    const move = makeAMove({
+    const { move, gameCopy } = makeAMove({
       from: sourceSquare,
       to: targetSquare,
       promotion: (selectedPiece.toLowerCase() ?? "q") as Exclude<
@@ -56,7 +61,15 @@ const ChessBoardComp = ({ pushMove, validateMove = () => true, fen }: PropTypes)
     });
 
     if (move === null) return false;
-    return validateMove(move.san);
+
+    const isMoveValid = validateMove(move.san);
+    if(!isMoveValid) {
+      gameCopy.undo();
+      return false;
+    }
+
+    setGame(gameCopy);
+    return true;
   };
 
   return (
