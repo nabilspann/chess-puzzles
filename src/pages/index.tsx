@@ -28,8 +28,6 @@ export default function Home() {
   //   setMove(event.target.value);
   // }
 
-  // console.log('move', move);
-  console.log("test?")
   return (
     <>
       <Head>
@@ -39,15 +37,8 @@ export default function Home() {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full md:max-w-2xl">
-          {/* <input
-            className="grow bg-transparent outline-none"
-            type="text"
-            value={move}
-            onChange={handleChange}
-          /> */}
           <StartPuzzle />
         </div>
-        {/* <button >MOVE</button> */}
       </main>
     </>
   );

@@ -20,6 +20,7 @@ const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrienta
   const [game, setGame] = useState(new Chess(fen));
 
   useEffect(() => {
+    console.log('moved')
     if (pushMove) {
       const { gameCopy } = makeAMove(pushMove);
       setGame(gameCopy);

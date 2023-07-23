@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ChessBoardComp from "~/components/ChessBoard"
-import { api } from "~/utils/api";
+import { api, RouterOutputs } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
 import type { SingleMove } from "~/interfaces";
+
+type PuzzleData = RouterOutputs["puzzles"]["getOne"][number];
 
 const difficultyOptions = [
   {
@@ -22,6 +24,7 @@ const difficultyOptions = [
 const WHITE = "white";
 const BLACK = "black";
 
+type FormatPgn = ReturnType<typeof formatPgn>
 const formatPgn = (pgn: string) => {
     const arrayPgn = pgn
       .replace("...", ". ...")
@@ -32,109 +35,94 @@ const formatPgn = (pgn: string) => {
     return formattedPgn;
 };
 
-const StartPuzzle = () => {
-  // let option = "easy";
-  const [ option, setOption ] = useState("easy");
-  const [ difficulty, setDifficulty ] = useState({ value: "easy" });
-  //Current move number
-  const [ moveCount, setMoveCount ] = useState(0);
-  //To push moves to the chess board
-  const [ pushMove, setPushMove ] = useState<SingleMove | null>(null);
-  // const [difficulty, setDifficulty] = useState("easy");
+type BoardOrientation = ReturnType<typeof getOrientation>
+let getOrientation = (puzzleData:PuzzleData)=>{
+  return puzzleData.fen?.split(" ")[1] === "b" ? BLACK : WHITE;
+}
 
-  // api.puzzles.getOne.useQuery({ difficulty });
-  const ctx = api.useContext();
-  // const { data, isLoading, refetch } = api.puzzles.getOne.useQuery({ difficulty: difficulty.value }, { refetchOnWindowFocus: false });
-  const { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
-    // { difficulty },
-    { difficulty: difficulty.value },
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+type reactive<T> = ReturnType< (x: T) => ([typeof x, Dispatch<SetStateAction<T>>]) > 
+const puzzleLogic = (
+  data: PuzzleData, $moveCount: reactive<number>, $pushMove: reactive<SingleMove | null>
+) => {
+  let [moveCount, setMoveCount] = $moveCount
+  let [_, setPushMove] = $pushMove
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    // option = event.target.value;
-    setOption(event.target.value);
-    // setDifficulty({ ...difficulty, value: event.target.value });
+  const boardOrientation = getOrientation(data)
+  const formattedPgn = formatPgn(data.pgn);
 
-    // setDifficulty(event.target.value);
-
-    // void ctx.puzzles.getOne.invalidate();
-    void ctx.puzzles.getOne.cancel();
-  };
-
-  const nextPuzzle = async (): Promise<void> => {
-    await refetch();
-    // console.log("nextpuzzle called??");
-    setDifficulty({ ...difficulty, value: option });
-    setMoveCount(0);
-    // setDifficulty(option);
-  };
-
-  if (isLoading) return <div>Loading</div>;
-
-  if (!data || !data[0]) return <div>Something went wrong</div>;
-  
-  const boardOrientation =
-    data[0].fen?.split(" ")[1] === "b" ? BLACK : WHITE;
-  const formattedPgn = formatPgn(data[0]?.pgn);
-  const pgnLength = formattedPgn.length;
-  console.log("formattedPgn", formattedPgn)
-  console.log("data", data);
-
-  const puzzleLogic = (chessMove: string) => {
+  return ( chessMove: string ) => {
+    if (!moveCount) return false // undefined
     const currentMove = formattedPgn[moveCount];
 
-    console.log("currentMove", currentMove);
-    console.log("chessMove", chessMove);
-    console.log(
-      "currentMove logic",
-      currentMove && currentMove[boardOrientation] === chessMove
-    );
+    // If user made wrong move (or moveCount out of range)
+    if (!currentMove || currentMove[boardOrientation] !== chessMove) return false;
     
-    //Check if the user made the correct move
-    if (currentMove  && !!(currentMove[boardOrientation] === chessMove)) {
-      //This checks if the puzzle reached the end
-      if (moveCount >= pgnLength - 1) {
-        console.log("YOU HAVE REACHED THE END!!!!");
-        return true;
-      }
-      const nextMove = formattedPgn[moveCount + 1];
-      //Next move
-      setMoveCount(moveCount + 1);
-
-      //Move response from the puzzle
-      if(boardOrientation === WHITE){
-        setPushMove(currentMove[BLACK]);
-      } 
-      else if (nextMove && boardOrientation === BLACK) {
-        setPushMove(nextMove[WHITE]);
-      }
+    // This checks if the puzzle reached the end
+    if (moveCount >= formattedPgn.length - 1) {
+      console.log("YOU HAVE REACHED THE END!!!!");
       return true;
     }
-    return false;
+    
+    // Next move
+    setMoveCount(moveCount + 1); 
+    const nextMove = formattedPgn[moveCount];
+
+    // Move response from the puzzle
+    if(boardOrientation === WHITE){
+      setPushMove(currentMove[BLACK]);
+    } else
+    if (nextMove && boardOrientation === BLACK) {
+      setPushMove(nextMove[WHITE]);
+    }
+
+    return true
+  }
+}
+
+const StartPuzzle = () => {
+  const [ difficulty, setDifficulty ] = useState("easy")
+  const [ settings, setSettings ] = useState({difficulty})
+
+  const $moveCount = useState(0)
+  const $pushMove = useState<SingleMove | null>(null)
+
+  let { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
+    { difficulty },
+    { refetchOnWindowFocus: false }
+  )
+  console.log(isLoading ? 'Preload render' : 'Loaded render')
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSettings({...settings, difficulty: event.target.value})
+  }
+
+  const nextPuzzle = async (): Promise<void> => {
+    setDifficulty(settings.difficulty)
+    await refetch()
+    $moveCount[1](0)
   }
 
   return (
     <div>
-      {/* <Board difficulty={difficulty} /> */}
-      <ChessBoardComp
-        fen={data[0].fen}
-        validateMove={puzzleLogic}
-        boardOrientation={boardOrientation}
-        pushMove={pushMove}
-      />
+     {(()=>{
+        if (isLoading) return <div>Loading</div>
+        if (!data || !data[0]) return <div>Something went wrong</div>
+
+        return <ChessBoardComp
+          fen={data[0].fen}
+          validateMove={puzzleLogic(data[0], $moveCount, $pushMove )}
+          boardOrientation={getOrientation(data[0])}
+          pushMove={$pushMove[0]}
+        />
+      })()}
       <div>
         <SelectOption
           labelText="Select the difficulty"
-          selectValue={option}
-          // selectValue={difficulty.value}
-          // selectValue={difficulty}
+          selectValue={settings.difficulty}
           handleChange={handleChange}
           options={difficultyOptions}
         />
-        <button onClick={() => void nextPuzzle()}>Next puzzle</button>
+        <button onClick={nextPuzzle}>Next puzzle</button>
       </div>
     </div>
   );
