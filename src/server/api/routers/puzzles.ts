@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+
+let currentID = ''
 export const puzzlesRouter = createTRPCRouter({
   getOne: publicProcedure
   .input(z.object({difficulty: z.string()}))
@@ -10,10 +12,18 @@ export const puzzlesRouter = createTRPCRouter({
     });
     const skip = Math.floor(Math.random() * count);
 
-    return ctx.prisma.puzzle.findMany({
+    let res = await ctx.prisma.puzzle.findMany({
       skip,
       take: 1,
-      where: { difficulty: input.difficulty },
-    });
+      where: { 
+        difficulty: input.difficulty,
+        NOT: {
+          id: currentID
+        }
+      },
+    })
+    currentID = res?.[0]?.id || ''
+
+    return res
   }),
 });
