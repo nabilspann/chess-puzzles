@@ -10,17 +10,15 @@ export const puzzlesRouter = createTRPCRouter({
     const count = await ctx.prisma.puzzle.count({
       where: { difficulty: input.difficulty },
     });
-    const skip = Math.floor(Math.random() * count);
+    const skip = Math.floor(Math.random() * (count-1));
 
     let res = await ctx.prisma.puzzle.findMany({
       skip,
       take: 1,
       where: { 
         difficulty: input.difficulty,
-        NOT: {
-          id: currentID
-        }
-      },
+        id: { not: currentID }
+      }
     })
     currentID = res?.[0]?.id || ''
 
