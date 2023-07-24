@@ -1,8 +1,24 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import ChessBoardComp from "~/components/ChessBoard"
+import { Dispatch, SetStateAction, useEffect, useState, useMemo } from "react";
 import { api, RouterOutputs } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
 import type { SingleMove } from "~/interfaces";
+
+
+import { Chess } from "chess.js";
+import type { Square, PieceType, ShortMove, Move, ChessInstance } from "chess.js";
+import { Chessboard } from "react-chessboard";
+
+interface MoveResult {
+  move: Move | null,
+  gameCopy: ChessInstance
+}
+
+interface PropTypes {
+  pushMove?: SingleMove | null,
+  validateMove?: (san: string) => boolean,
+  fen?: string,
+  boardOrientation: "white" | "black"
+}
 
 type PuzzleData = RouterOutputs["puzzles"]["getOne"][number];
 
@@ -82,14 +98,24 @@ const StartPuzzle = () => {
   const [ difficulty, setDifficulty ] = useState("easy")
   const [ settings, setSettings ] = useState({difficulty})
 
+  const [game, setGame] = useState(new Chess())
+  const [anim, setAnim] = useState(0)
+
+  let { data, refetch } = api.puzzles.getOne.useQuery(
+    { difficulty },
+    { refetchOnWindowFocus: false,
+      onSuccess: data => {
+        console.log('hit')
+        if (typeof data?.[0]?.fen === 'string') {
+          setGame( new Chess(data?.[0]?.fen) )
+          setAnim(300)
+        }
+      }
+    }
+  )
+
   const $moveCount = useState(0)
   const $pushMove = useState<SingleMove | null>(null)
-
-  let { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
-    { difficulty },
-    { refetchOnWindowFocus: false }
-  )
-  console.log(isLoading ? 'Preload render' : 'Loaded render')
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSettings({...settings, difficulty: event.target.value})
@@ -103,17 +129,15 @@ const StartPuzzle = () => {
 
   return (
     <div>
-     {(()=>{
-        if (isLoading) return <div>Loading</div>
-        if (!data || !data[0]) return <div>Something went wrong</div>
+      <div>
+        <h3>Difficulty: {difficulty}</h3>
 
-        return <ChessBoardComp
-          fen={data[0].fen}
-          validateMove={puzzleLogic(data[0], $moveCount, $pushMove )}
-          boardOrientation={getOrientation(data[0])}
-          pushMove={$pushMove[0]}
-        />
-      })()}
+        <div className="h-full w-full pb-4 pt-10 md:max-w-4xl">
+          {game.fen()}
+          <Chessboard position={game.fen()} animationDuration={anim} />
+        </div>
+        
+      </div>
       <div>
         <SelectOption
           labelText="Select the difficulty"
