@@ -51,7 +51,6 @@ const puzzleLogic = (
   const formattedPgn = formatPgn(data.pgn);
 
   return ( chessMove: string ) => {
-    if (!moveCount) return false // undefined
     const currentMove = formattedPgn[moveCount];
 
     // If user made wrong move (or moveCount out of range)
