@@ -17,7 +17,7 @@
     "@trpc/next": "^10.26.0",
     "@trpc/react-query": "^10.26.0",
     "@trpc/server": "^10.26.0",
-    "chess.js": "^0.13.4",
+    "chess.js": "^1.0.0-beta.6",
     "next": "^13.4.2",
     "react": "18.2.0",
     "react-chessboard": "^3.2.0",

@@ -3,9 +3,8 @@ import { api, RouterOutputs } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
 import type { SingleMove } from "~/interfaces";
 
-
 import { Chess } from "chess.js";
-import type { Square, PieceType, ShortMove, Move, ChessInstance } from "chess.js";
+import type { Square, Move, PieceType } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 interface MoveResult {
@@ -43,11 +42,15 @@ const BLACK = "black";
 type FormatPgn = ReturnType<typeof formatPgn>
 const formatPgn = (pgn: string) => {
     const arrayPgn = pgn
-      .replace("...", ". ...")
       .split(/\d+\. /g)
       .slice(1)
       .map((eachMove) => eachMove.trim().split(' '));
-    const formattedPgn = arrayPgn.map((eachMove) => ({white: eachMove[0] || null, black: eachMove[1] || null}))
+
+    const formattedPgn = arrayPgn.map((eachMove) => ({
+      white: eachMove[0] && eachMove[0] !== '...' ? eachMove[0] : null, 
+      black: eachMove[1] || null
+    }))
+
     return formattedPgn;
 };
 
@@ -58,19 +61,22 @@ let getOrientation = (puzzleData:PuzzleData)=>{
 
 type reactive<T> = ReturnType< (x: T) => ([typeof x, Dispatch<SetStateAction<T>>]) > 
 const puzzleLogic = (
-  data: PuzzleData, $moveCount: reactive<number>, $pushMove: reactive<SingleMove | null>
+  data: PuzzleData | undefined,
+  $moveCount: reactive<number>, $pushMove: reactive<SingleMove | null>
 ) => {
+  const formattedPgn = useMemo(()=>formatPgn(data?.pgn || ''), [data?.pgn])
+
+  if (!data) return ()=>false
+
   let [moveCount, setMoveCount] = $moveCount
   let [_, setPushMove] = $pushMove
-
   const boardOrientation = getOrientation(data)
-  const formattedPgn = formatPgn(data.pgn);
 
-  return ( chessMove: string ) => {
+  return ( chessMove: Move ) => {
     const currentMove = formattedPgn[moveCount];
 
     // If user made wrong move (or moveCount out of range)
-    if (!currentMove || currentMove[boardOrientation] !== chessMove) return false;
+    if (!currentMove || currentMove[boardOrientation] !== chessMove.san) return false;
     
     // This checks if the puzzle reached the end
     if (moveCount >= formattedPgn.length - 1) {
@@ -80,7 +86,7 @@ const puzzleLogic = (
     
     // Next move
     setMoveCount(moveCount + 1); 
-    const nextMove = formattedPgn[moveCount];
+    const nextMove = formattedPgn[moveCount + 1];
 
     // Move response from the puzzle
     if(boardOrientation === WHITE){
@@ -93,6 +99,38 @@ const puzzleLogic = (
     return true
   }
 }
+
+type MakeAMove = (nextMove: SingleMove) => MoveResult
+type IsValid = (move: Move) => boolean
+type SetGame = Dispatch<SetStateAction<Chess>>
+const onDrop = (makeAMove:MakeAMove, isValid:IsValid, setGame:SetGame) => (
+  sourceSquare: Square,
+  targetSquare: Square,
+  piece: string
+) => {
+  const selectedPiece = piece[1];
+
+  if (!selectedPiece) {
+    return false;
+  }
+
+  const { move, gameCopy } = makeAMove({
+    from: sourceSquare,
+    to: targetSquare,
+    promotion: (selectedPiece.toLowerCase() ?? "q") as Exclude< PieceType, "p" | "k" >,
+  });
+
+  if (move === null) return false;
+
+  const isMoveValid = isValid(move)
+  if(!isMoveValid) {
+    gameCopy.undo();
+    return false;
+  }
+
+  setGame(gameCopy);
+  return true;
+};
 
 const StartPuzzle = () => {
   const [ difficulty, setDifficulty ] = useState("easy")
@@ -108,7 +146,7 @@ const StartPuzzle = () => {
         console.log('hit')
         if (typeof data?.[0]?.fen === 'string') {
           setGame( new Chess(data?.[0]?.fen) )
-          setAnim(300)
+          if (anim===0) setAnim(300)
         }
       }
     }
@@ -124,8 +162,27 @@ const StartPuzzle = () => {
   const nextPuzzle = async (): Promise<void> => {
     setDifficulty(settings.difficulty)
     await refetch()
+    // reset move count
     $moveCount[1](0)
   }
+
+  const makeAMove = (nextMove: SingleMove): MoveResult => {
+    const gameCopy = new Chess(game.fen())
+    let move;
+    try { move = gameCopy.move(nextMove, {strict:false}) } 
+    catch (err:any) {
+      console.log(err?.message) 
+      move = null
+    }
+    return { move, gameCopy }
+  };
+
+  let autoMove = ()=> {
+    if ($pushMove[0]) setGame( makeAMove($pushMove[0]).gameCopy )
+  }
+  useEffect(autoMove, [$pushMove[0]])
+
+  let isValid = puzzleLogic(data?.[0], $moveCount, $pushMove )
 
   return (
     <div>
@@ -134,7 +191,12 @@ const StartPuzzle = () => {
 
         <div className="h-full w-full pb-4 pt-10 md:max-w-4xl">
           {game.fen()}
-          <Chessboard position={game.fen()} animationDuration={anim} />
+          <Chessboard 
+            position={game.fen()} 
+            animationDuration={anim}
+            onPieceDrop={onDrop(makeAMove, isValid, setGame)}
+            boardOrientation={data?.[0] ? getOrientation(data[0]) : WHITE}
+          />
         </div>
         
       </div>

@@ -20,7 +20,11 @@ export const puzzlesRouter = createTRPCRouter({
         id: { not: currentID }
       }
     })
-    currentID = res?.[0]?.id || ''
+    
+    if (res?.[0]) {
+      currentID = res[0].id
+      res[0].pgn = res[0].pgn.replace('...', '. ...')
+    }
 
     return res
   }),
