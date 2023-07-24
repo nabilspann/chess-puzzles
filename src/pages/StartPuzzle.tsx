@@ -4,12 +4,12 @@ import SelectOption from "~/components/SelectOption";
 import type { SingleMove } from "~/interfaces";
 
 import { Chess } from "chess.js";
-import type { Square, Move, PieceType } from "chess.js";
+import type { Square, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 interface MoveResult {
   move: Move | null,
-  gameCopy: ChessInstance
+  gameCopy: Chess
 }
 
 interface PropTypes {
@@ -117,7 +117,7 @@ const onDrop = (makeAMove:MakeAMove, isValid:IsValid, setGame:SetGame) => (
   const { move, gameCopy } = makeAMove({
     from: sourceSquare,
     to: targetSquare,
-    promotion: (selectedPiece.toLowerCase() ?? "q") as Exclude< PieceType, "p" | "k" >,
+    promotion: (selectedPiece.toLowerCase() ?? "q") as Exclude< string, "p" | "k" >,
   });
 
   if (move === null) return false;
