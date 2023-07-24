@@ -37,7 +37,7 @@ const formatPgn = (pgn: string) => {
 
 type BoardOrientation = ReturnType<typeof getOrientation>
 let getOrientation = (puzzleData:PuzzleData)=>{
-  return puzzleData.fen?.split(" ")[1] === "b" ? BLACK : WHITE;
+  return puzzleData.fen.includes('w') ? WHITE : BLACK;
 }
 
 type reactive<T> = ReturnType< (x: T) => ([typeof x, Dispatch<SetStateAction<T>>]) > 
