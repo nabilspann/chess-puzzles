@@ -2,7 +2,7 @@ import { Chess } from "chess.js";
 import type { Square, PieceType, ShortMove, Move, ChessInstance } from "chess.js";
 import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
-import type { SingleMove } from "~/interfaces";
+import type { BoardOrientation, SingleMove } from "~/interfaces";
 
 interface MoveResult {
   move: Move | null,
@@ -13,10 +13,11 @@ interface PropTypes {
   pushMove?: SingleMove | null,
   validateMove?: (san: string) => boolean,
   fen?: string,
-  boardOrientation: "white" | "black"
+  boardOrientation: BoardOrientation,
+  animation?: number
 }
 
-const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrientation }: PropTypes) => {
+const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrientation, animation = 0 }: PropTypes) => {
   const [game, setGame] = useState(new Chess(fen));
 
   useEffect(() => {
@@ -74,7 +75,12 @@ const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrienta
 
   return (
     <div className="h-full w-full pb-4 pt-10 md:max-w-4xl">
-      <Chessboard onPieceDrop={onDrop} position={game.fen()} boardOrientation={boardOrientation} />
+      <Chessboard
+        onPieceDrop={onDrop}
+        position={game.fen()}
+        boardOrientation={boardOrientation}
+        animationDuration={animation}
+      />
     </div>
   );
 }
