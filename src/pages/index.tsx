@@ -38,7 +38,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen justify-center">
-        <div className="h-full w-full md:max-w-2xl">
+        <div className="h-full w-full md:max-w-5xl">
           {/* <input
             className="grow bg-transparent outline-none"
             type="text"

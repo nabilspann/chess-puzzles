@@ -6,73 +6,50 @@ interface PgnMove {
   black: string | null
 }
 
-// interface AnnotationMove {
-//   move: string;
-//   boardOrientation: BoardOrientation;
-// }
-
 interface PropType {
   pgn?: PgnMove[],
-  // pushMove: AnnotationMove[]
 }
 
+const moveClass = "w-32 flex-auto border-l-2 border-gray-200 bg-white pl-3 text-black";
 const Annotation = ({ pgn = []}: PropType) => {
-  // const [pgn, setPgn] = useState(initialPgn);
-
-  // useEffect(() => {
-    
-  //       console.log("pushMove", pushMove);
-  //   if(pushMove) {
-  //       const newPgn = [ ...pgn ];
-  //       const arrLength = newPgn.length;
-  //       // if (arrLength === 0 || !!newPgn[arrLength - 1]?.black) {
-  //       //   newPgn.push({
-  //       //     white: pushMove,
-  //       //     black: null,
-  //       //   });
-  //       //   setPgn(newPgn);
-  //       // }
-  //       // else if (newPgn[arrLength - 1]?.white !== undefined ) {
-  //       //   console.log("newPgn[arrLength - 1]", newPgn[arrLength - 1]);
-  //       //   newPgn[arrLength - 1] = { ...newPgn[arrLength - 1], black: pushMove };
-  //       //   setPgn(newPgn);
-  //       // }
-  //       // if (arrLength === 0 || pushMove.boardOrientation ) {
-  //       //   newPgn.push({
-  //       //     white: pushMove,
-  //       //     black: null,
-  //       //   });
-  //       //   setPgn(newPgn);
-  //       // } else if (newPgn[arrLength - 1]?.white !== undefined) {
-  //       //   console.log("newPgn[arrLength - 1]", newPgn[arrLength - 1]);
-  //       //   newPgn[arrLength - 1] = { ...newPgn[arrLength - 1], black: pushMove };
-  //       //   setPgn(newPgn);
-  //       // }
-  //   }
-  // }, [pushMove]);
   console.log("pgn", pgn);
+
+  if(pgn.length === 0){
+    return(
+        <div className="h-18 max-w-sm bg-white">
+    {
+      [1, 2, 3].map((eachIndex) => (
+        <div key={eachIndex + 1} className="flex">
+          <div className="w-12 flex-none bg-slate-400 text-center">
+            {eachIndex}
+          </div>
+        </div>
+      ))
+    }
+        </div>
+    )
+  }
+
   return (
-    <div className="max-w-sm">
+    <div className="max-w-sm bg-white">
       {pgn.map((eachMove, index) => {
-        console.log("eachMOve", eachMove)
         const whiteMove = eachMove.white || "...";
         const blackMove = eachMove.black || "...";
-        console.log("whiemove", whiteMove);
-        console.log("blackmove", blackMove);
 
         return (
           <div key={`${whiteMove}${blackMove}`} className="flex">
             <div className="w-12 flex-none bg-slate-400 text-center">
               {index + 1}
             </div>
-            <div className="w-32 flex-auto border-l-2 border-gray-200 bg-white pl-3 text-black">
+            <div className={moveClass}>
               {whiteMove}
             </div>
-            <div className="w-32 flex-auto border-l-2 border-gray-200 bg-white pl-3 text-black">
+            <div className={moveClass}>
               {eachMove.black}
             </div>
           </div>
-        );})}
+        );
+      })}
     </div>
   );
 };

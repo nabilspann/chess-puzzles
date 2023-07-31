@@ -74,7 +74,7 @@ const ChessBoardComp = ({ pushMove, validateMove = () => true, fen, boardOrienta
   };
 
   return (
-    <div className="h-full w-full pb-4 pt-10 md:max-w-4xl">
+    <div className="w-full md:max-w-4xl">
       <Chessboard
         onPieceDrop={onDrop}
         position={game.fen()}

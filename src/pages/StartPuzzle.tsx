@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useMemo, useReducer, useState } from "react";
 import ChessBoardComp from "~/components/ChessBoard"
 import { type RouterOutputs, api } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
@@ -54,7 +54,7 @@ interface PgnMove {
 }
 
 interface AnnotationAction {
-  type: BoardOrientation,
+  type: BoardOrientation | "reset_board",
   whiteMove?: string | null,
   blackMove?: string | null
 }
@@ -129,10 +129,13 @@ const annotationReducer = (state: PgnMove[], action: AnnotationAction): PgnMove[
       }
       const newState = [ ...state ];
       newState[newState.length - 1] = {
-        ...newState[newState.length - 1],
-        black
+        white: newState[newState.length - 1]?.white || null,
+        black,
       };
-      return [ ...newState, {white, black: null}];
+      if(!!white){
+        newState.push({ white, black: null });
+      }
+      return newState;
     }
     default:
       return []
@@ -163,7 +166,6 @@ const StartPuzzle = () => {
     {
       refetchOnWindowFocus: false,
       onSuccess: (data) => {
-        console.log("hit");
         if (typeof data?.[0]?.fen === "string") {
           const boardOrientation = getOrientation(data[0]);
           setPuzzleMessage({ type: PUZZLE_INITIALIZATION, boardOrientation })
@@ -184,11 +186,9 @@ const StartPuzzle = () => {
 
   const nextPuzzle = async (): Promise<void> => {
     await refetch();
-    // console.log("nextpuzzle called??");
     setDifficulty({ ...difficulty, value: option });
     setMoveCount(0);
-    setAnnotation([]);
-    // setDifficulty(option);
+    setAnnotation({ type: "reset_board" });
   };
 
   if (isLoading) return <div>Loading</div>;
@@ -198,17 +198,11 @@ const StartPuzzle = () => {
   const boardOrientation = getOrientation(data[0]);
   console.log("formattedPgn", formattedPgn)
   console.log("data", data);
-  // console.log("pushmove", pushMove);
 
   const puzzleLogic = (chessMove: string) => {
     const currentMove = formattedPgn[moveCount];
 
-    // console.log("currentMove", currentMove);
     console.log("chessMove", chessMove);
-    // console.log(
-    //   "currentMove logic",
-    //   currentMove && currentMove[boardOrientation] === chessMove
-    // );
 
     if(puzzleMessage.messageType === PUZZLE_SOLVED){
       return false;
@@ -216,31 +210,15 @@ const StartPuzzle = () => {
     
     //Check if the user made the correct move
     if (currentMove  && !!(currentMove[boardOrientation] === chessMove)) {
-      // setAnnotationPushMove({move: chessMove, boardOrientation});
-      // setAnnotationPushMove(previousMove => ({ ...previousMove, move: chessMove, boardOrientation }));
-      // setAnnotationPushMove(chessMove);
       //This checks if the puzzle reached the end
       if (moveCount >= pgnLength - 1) {
         setPuzzleMessage({ type: PUZZLE_SOLVED });
         if(boardOrientation === WHITE){
-          // setAnnotation(previousMoves => [
-          //   ...previousMoves,
-          //   { white: chessMove, black: null}
-          // ])
           setAnnotation({
             type: WHITE,
             whiteMove: chessMove,
           });
         } else {
-          // setAnnotation((previousMoves) => {
-          //   const previousArr = [...previousMoves];
-          //   console.log("previousArr", previousArr);
-          //   previousArr[previousMoves.length - 1] = {
-          //     ...previousArr[previousMoves.length - 1],
-          //     black: chessMove,
-          //   };
-          //   return [...previousArr];
-          // });
           setAnnotation({
             type: BLACK,
             blackMove: chessMove,
@@ -255,10 +233,6 @@ const StartPuzzle = () => {
       //Move response from the puzzle
       if (boardOrientation === WHITE && currentMove[BLACK]) {
         setPushMove(currentMove[BLACK]);
-        // setAnnotation((previousMoves) => [
-        //   ...previousMoves,
-        //   { white: chessMove, black: currentMove[BLACK] },
-        // ]);
         setAnnotation({
           type: WHITE,
           whiteMove: chessMove,
@@ -267,23 +241,6 @@ const StartPuzzle = () => {
         // setAnnotationPushMove(currentMove[BLACK]);
       } else if (nextMove && boardOrientation === BLACK && nextMove[WHITE]) {
         setPushMove(nextMove[WHITE]);
-        
-        // setAnnotation((previousMoves) => {
-        //   if(previousMoves.length === 0){
-        //     console.log("length 0")
-        //     return [
-        //       { white: null, black: chessMove },
-        //       { white: nextMove[WHITE], black: null },
-        //     ];
-        //   }
-        //   const previousArr = [...previousMoves];
-        //   console.log("previousArr", previousArr);
-        //   previousArr[previousMoves.length - 1] = {
-        //     ...previousArr[previousMoves.length - 1],
-        //     black: chessMove
-        //   };
-        //   return [...previousArr, { white: nextMove[WHITE], black: null }];
-        // });
         setAnnotation({
           type: BLACK,
           whiteMove: nextMove[WHITE],
@@ -298,32 +255,35 @@ const StartPuzzle = () => {
 
   const { message, messageType } = puzzleMessage;
   return (
-    <div className="py-5">
-      <ChessBoardComp
-        fen={data[0].fen}
-        validateMove={puzzleLogic}
-        boardOrientation={boardOrientation}
-        pushMove={pushMove}
-        animation={anim}
-      />
-      <div>
-        <SelectOption
-          labelText="Select the difficulty"
-          selectValue={option}
-          handleChange={handleChange}
-          options={difficultyOptions}
+    <div className="p-5 pt-10 md:grid md:grid-cols-6">
+      {/* <div className="p-5"> */}
+      <div className="md:col-span-4 md:px-5">
+        <ChessBoardComp
+          fen={data[0].fen}
+          validateMove={puzzleLogic}
+          boardOrientation={boardOrientation}
+          pushMove={pushMove}
+          animation={anim}
         />
-        <button onClick={() => void nextPuzzle()}>Next puzzle</button>
-      </div>
-      <div
-        className={`pt-5 text-center text-2xl font-semibold
+        <div className="py-5">
+          <SelectOption
+            labelText="Select the difficulty"
+            selectValue={option}
+            handleChange={handleChange}
+            options={difficultyOptions}
+          />
+          <button onClick={() => void nextPuzzle()}>Next puzzle</button>
+        </div>
+        <div
+          className={`text-center text-2xl font-semibold
           ${messageType === INCORRECT_MOVE ? "text-red-500" : ""}
           ${messageType === PUZZLE_SOLVED ? "text-lime-500" : ""}
         `}
-      >
-        {message}
+        >
+          {message}
+        </div>
       </div>
-      <div className="h-full">
+      <div className="h-full max-md:py-10 md:col-span-2">
         <Annotation pgn={annotation} />
       </div>
     </div>
