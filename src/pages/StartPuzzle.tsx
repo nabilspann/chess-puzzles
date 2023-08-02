@@ -1,9 +1,9 @@
-import { useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import ChessBoardComp from "~/components/ChessBoard"
 import { type RouterOutputs, api } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
-import type { SingleMove, BoardOrientation } from "~/interfaces";
-import { WHITE, BLACK } from "~/utils/contants";
+import type { SingleMove, BoardOrientation, Difficulty } from "~/interfaces";
+import { WHITE, BLACK } from "~/utils/constants";
 import Annotation from "~/components/Annotation";
 
 const difficultyOptions = [
@@ -23,10 +23,6 @@ const difficultyOptions = [
 
 type PuzzleData = RouterOutputs["puzzles"]["getOne"][number];
 
-// type BoardOrientation = ReturnType<typeof getOrientation>;
-// const WHITE = "white";
-// const BLACK = "black";
-
 const messageTypes = [
   "PUZZLE_INITIALIZATION",
   "INCORRECT_MOVE",
@@ -39,13 +35,13 @@ const [PUZZLE_INITIALIZATION, INCORRECT_MOVE, CORRECT_MOVE, PUZZLE_SOLVED] =
   messageTypes;
 
 interface MessageReducer {
-  type: string,
-  boardOrientation?: BoardOrientation
+  type: string;
+  boardOrientation?: BoardOrientation;
 }
 
 interface MessageResponse {
-  messageType: typeof messageTypes[number],
-  message: string
+  messageType: typeof messageTypes[number];
+  message: string;
 }
 
 interface PgnMove {
@@ -54,9 +50,19 @@ interface PgnMove {
 }
 
 interface AnnotationAction {
-  type: BoardOrientation | "reset_board",
-  whiteMove?: string | null,
-  blackMove?: string | null
+  type: BoardOrientation | "reset_board";
+  whiteMove?: string | null;
+  blackMove?: string | null;
+}
+
+interface PropType {
+  data: PuzzleData[];
+  isLoading: boolean;
+  refetch: () => Promise<void>;
+  boardOrientation: BoardOrientation;
+  anim: number;
+  difficulty: Difficulty;
+  setDifficulty: (x: Difficulty) => void;
 }
 
 const formatPgn = (pgn: string) => {
@@ -74,9 +80,9 @@ const formatPgn = (pgn: string) => {
     return formattedPgn;
 };
 
-const getOrientation = (puzzleData: PuzzleData) => {
-  return puzzleData.fen.includes('w') ? WHITE : BLACK;
-};
+// const getOrientation = (puzzleData: PuzzleData) => {
+//   return puzzleData.fen.includes('w') ? WHITE : BLACK;
+// };
 
 const messageReducer = (
   _: unknown,
@@ -142,38 +148,32 @@ const annotationReducer = (state: PgnMove[], action: AnnotationAction): PgnMove[
   }
 }
 
-const StartPuzzle = () => {
-  const [ option, setOption ] = useState("easy");
-  const [ difficulty, setDifficulty ] = useState({ value: "easy" });
+const StartPuzzle = ({
+  data,
+  isLoading,
+  refetch,
+  boardOrientation,
+  anim,
+  difficulty,
+  setDifficulty
+}: PropType) => {
+  const [ option, setOption ] = useState(difficulty);
+  // const [ difficulty, setDifficulty ] = useState({ value: "easy" });
   //Current move number
   const [ moveCount, setMoveCount ] = useState(0);
   //To push moves to the chess board to respond to the user's move
   const [ pushMove, setPushMove ] = useState<SingleMove | null>(null);
-  // const [annotation, setAnnotation] =
-  //   useState<PgnMove[]>([]);
   const [annotation, setAnnotation] = useReducer(annotationReducer, []);
-
-  const [ anim, setAnim ] = useState(0);
-
   const [puzzleMessage, setPuzzleMessage] = useReducer(messageReducer, {
     messageType: "",
     message: "",
   });
 
+  useEffect(() => {
+    setPuzzleMessage({ type: PUZZLE_INITIALIZATION, boardOrientation });
+  }, [boardOrientation, data]);
+
   const ctx = api.useContext();
-  const { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
-    { difficulty: difficulty.value },
-    {
-      refetchOnWindowFocus: false,
-      onSuccess: (data) => {
-        if (typeof data?.[0]?.fen === "string") {
-          const boardOrientation = getOrientation(data[0]);
-          setPuzzleMessage({ type: PUZZLE_INITIALIZATION, boardOrientation })
-          if (anim === 0) setAnim(300);
-        }
-      },
-    }
-  );
 
   const puzzleData = data?.[0];
   const formattedPgn = useMemo(() => formatPgn(puzzleData?.pgn || ''), [puzzleData?.pgn]);
@@ -186,7 +186,8 @@ const StartPuzzle = () => {
 
   const nextPuzzle = async (): Promise<void> => {
     await refetch();
-    setDifficulty({ ...difficulty, value: option });
+    setDifficulty(option);
+
     setMoveCount(0);
     setAnnotation({ type: "reset_board" });
   };
@@ -194,15 +195,10 @@ const StartPuzzle = () => {
   if (isLoading) return <div>Loading</div>;
 
   if (!data || !data[0]) return <div>Something went wrong</div>;
-  
-  const boardOrientation = getOrientation(data[0]);
-  console.log("formattedPgn", formattedPgn)
-  console.log("data", data);
+
 
   const puzzleLogic = (chessMove: string) => {
     const currentMove = formattedPgn[moveCount];
-
-    console.log("chessMove", chessMove);
 
     if(puzzleMessage.messageType === PUZZLE_SOLVED){
       return false;
@@ -238,7 +234,6 @@ const StartPuzzle = () => {
           whiteMove: chessMove,
           blackMove: currentMove[BLACK],
         });
-        // setAnnotationPushMove(currentMove[BLACK]);
       } else if (nextMove && boardOrientation === BLACK && nextMove[WHITE]) {
         setPushMove(nextMove[WHITE]);
         setAnnotation({
@@ -256,7 +251,6 @@ const StartPuzzle = () => {
   const { message, messageType } = puzzleMessage;
   return (
     <div className="p-5 pt-10 md:grid md:grid-cols-6">
-      {/* <div className="p-5"> */}
       <div className="md:col-span-4 md:px-5">
         <ChessBoardComp
           fen={data[0].fen}

@@ -1,35 +1,38 @@
 import Head from "next/head";
-import { api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 import { useState } from "react";
 import StartPuzzle from "./StartPuzzle";
+import { WHITE } from "~/utils/constants";
+import type { BoardOrientation, Difficulty } from "~/interfaces";
+import { getOrientation } from "~/utils/utilFunctions";
 
 export default function Home() {
-  // api.puzzles.getOne.useQuery(
-  //   { difficulty: 'easy' },
-  //   {
-  //     refetchOnWindowFocus: false,
-  //   }
-  // );
-  //  api.puzzles.getOne.useQuery(
-  //    { difficulty: "medium" },
-  //    {
-  //      refetchOnWindowFocus: false,
-  //    }
-  //  );
-  //   api.puzzles.getOne.useQuery(
-  //     { difficulty: "hard" },
-  //     {
-  //       refetchOnWindowFocus: false,
-  //     }
-  //   );
-  // const [move, setMove] = useState('');
-  // const { data } = api.puzzles.getOne.useQuery({difficulty: 'hard'});
-  // const handleChange = (event) => {
-  //   setMove(event.target.value);
-  // }
+  const [anim, setAnim] = useState(0);
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [boardOrientation, setBoardOrientation] = useState<BoardOrientation>(WHITE);
 
-  // console.log('move', move);
-  console.log("test?")
+  const { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
+    { difficulty },
+    {
+      refetchOnWindowFocus: false,
+      onSuccess: (data) => {
+        if (typeof data?.[0]?.fen === "string") {
+          setBoardOrientation(getOrientation(data[0]));
+          if (anim === 0) setAnim(300);
+        }
+      },
+    }
+  );
+ 
+  const refetchQuery = async () => {
+    await refetch();
+  }
+
+  if (isLoading) return <div>Loading</div>;
+
+  if (!data || !data[0]) return <div>Something went wrong</div>;
+
+  console.log("boardorientation", boardOrientation)
   return (
     <>
       <Head>
@@ -39,15 +42,8 @@ export default function Home() {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full md:max-w-5xl">
-          {/* <input
-            className="grow bg-transparent outline-none"
-            type="text"
-            value={move}
-            onChange={handleChange}
-          /> */}
-          <StartPuzzle />
+          <StartPuzzle data={data} isLoading={isLoading} refetch={refetchQuery} boardOrientation={boardOrientation} anim={anim} difficulty={difficulty} setDifficulty={(difficulty: Difficulty) => setDifficulty(difficulty)}/>
         </div>
-        {/* <button >MOVE</button> */}
       </main>
     </>
   );
