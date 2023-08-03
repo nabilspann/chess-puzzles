@@ -2,9 +2,12 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import ChessBoardComp from "~/components/ChessBoard"
 import { type RouterOutputs, api } from "~/utils/api";
 import SelectOption from "~/components/SelectOption";
-import type { SingleMove, BoardOrientation, Difficulty } from "~/interfaces";
+import type { Difficulty } from "~/interfaces";
 import { WHITE, BLACK } from "~/utils/constants";
 import Annotation from "~/components/Annotation";
+import { Chess } from "chess.js";
+import { makeAMove } from "~/utils/utilFunctions";
+import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 
 const difficultyOptions = [
   {
@@ -150,19 +153,16 @@ const annotationReducer = (state: PgnMove[], action: AnnotationAction): PgnMove[
 
 const StartPuzzle = ({
   data,
-  isLoading,
   refetch,
   boardOrientation,
   anim,
   difficulty,
   setDifficulty
 }: PropType) => {
+  const [game, setGame] = useState(new Chess());
   const [ option, setOption ] = useState(difficulty);
-  // const [ difficulty, setDifficulty ] = useState({ value: "easy" });
   //Current move number
   const [ moveCount, setMoveCount ] = useState(0);
-  //To push moves to the chess board to respond to the user's move
-  const [ pushMove, setPushMove ] = useState<SingleMove | null>(null);
   const [annotation, setAnnotation] = useReducer(annotationReducer, []);
   const [puzzleMessage, setPuzzleMessage] = useReducer(messageReducer, {
     messageType: "",
@@ -170,7 +170,12 @@ const StartPuzzle = ({
   });
 
   useEffect(() => {
+    const fen = data?.[0]?.fen;
     setPuzzleMessage({ type: PUZZLE_INITIALIZATION, boardOrientation });
+    if (fen) {
+      game.load(fen);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardOrientation, data]);
 
   const ctx = api.useContext();
@@ -180,7 +185,7 @@ const StartPuzzle = ({
   const pgnLength = formattedPgn.length;
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setOption(event.target.value);
+    setOption(event.target.value as Difficulty);
     void ctx.puzzles.getOne.cancel();
   };
 
@@ -191,11 +196,6 @@ const StartPuzzle = ({
     setMoveCount(0);
     setAnnotation({ type: "reset_board" });
   };
-
-  if (isLoading) return <div>Loading</div>;
-
-  if (!data || !data[0]) return <div>Something went wrong</div>;
-
 
   const puzzleLogic = (chessMove: string) => {
     const currentMove = formattedPgn[moveCount];
@@ -228,14 +228,18 @@ const StartPuzzle = ({
       setPuzzleMessage({ type: CORRECT_MOVE });
       //Move response from the puzzle
       if (boardOrientation === WHITE && currentMove[BLACK]) {
-        setPushMove(currentMove[BLACK]);
+        // setPushMove(currentMove[BLACK]);
+        const { gameCopy } = makeAMove(currentMove[BLACK], game);
+        setGame(gameCopy);
         setAnnotation({
           type: WHITE,
           whiteMove: chessMove,
           blackMove: currentMove[BLACK],
         });
       } else if (nextMove && boardOrientation === BLACK && nextMove[WHITE]) {
-        setPushMove(nextMove[WHITE]);
+        // setPushMove(nextMove[WHITE]);
+        const { gameCopy } = makeAMove(nextMove[WHITE], game);
+        setGame(gameCopy);
         setAnnotation({
           type: BLACK,
           whiteMove: nextMove[WHITE],
@@ -253,11 +257,11 @@ const StartPuzzle = ({
     <div className="p-5 pt-10 md:grid md:grid-cols-6">
       <div className="md:col-span-4 md:px-5">
         <ChessBoardComp
-          fen={data[0].fen}
           validateMove={puzzleLogic}
           boardOrientation={boardOrientation}
-          pushMove={pushMove}
           animation={anim}
+          game={game}
+          mutateGame={(newGame) => setGame(newGame)}
         />
         <div className="py-5">
           <SelectOption

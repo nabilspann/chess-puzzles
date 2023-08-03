@@ -1,10 +1,12 @@
 import Head from "next/head";
-import { type RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
 import { useState } from "react";
+import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 import StartPuzzle from "./StartPuzzle";
 import { WHITE } from "~/utils/constants";
-import type { BoardOrientation, Difficulty } from "~/interfaces";
+import type { Difficulty } from "~/interfaces";
 import { getOrientation } from "~/utils/utilFunctions";
+import Analysis from "./Analysis";
 
 export default function Home() {
   const [anim, setAnim] = useState(0);
@@ -42,7 +44,8 @@ export default function Home() {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full md:max-w-5xl">
-          <StartPuzzle data={data} isLoading={isLoading} refetch={refetchQuery} boardOrientation={boardOrientation} anim={anim} difficulty={difficulty} setDifficulty={(difficulty: Difficulty) => setDifficulty(difficulty)}/>
+          {/* <StartPuzzle data={data} isLoading={isLoading} refetch={refetchQuery} boardOrientation={boardOrientation} anim={anim} difficulty={difficulty} setDifficulty={(difficulty: Difficulty) => setDifficulty(difficulty)}/> */}
+          <Analysis data={data} anim={anim} boardOrientation={boardOrientation} />
         </div>
       </main>
     </>
