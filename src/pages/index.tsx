@@ -34,7 +34,6 @@ export default function Home() {
 
   if (!data || !data[0]) return <div>Something went wrong</div>;
 
-  console.log("boardorientation", boardOrientation)
   return (
     <>
       <Head>

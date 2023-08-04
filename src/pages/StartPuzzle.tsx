@@ -6,7 +6,7 @@ import type { Difficulty } from "~/interfaces";
 import { WHITE, BLACK } from "~/utils/constants";
 import Annotation from "~/components/Annotation";
 import { Chess } from "chess.js";
-import { makeAMove } from "~/utils/utilFunctions";
+import { makeAMove, formatPgn } from "~/utils/utilFunctions";
 import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 
 const difficultyOptions = [
@@ -67,25 +67,6 @@ interface PropType {
   difficulty: Difficulty;
   setDifficulty: (x: Difficulty) => void;
 }
-
-const formatPgn = (pgn: string) => {
-    const arrayPgn = pgn
-      .split(/\d+\. /g)
-      .slice(1)
-      .map((eachMove) => eachMove.trim().split(' '));
-    const newArrPgn = pgn.split(/\d+\. /g);
-    console.log("newArrPgn", newArrPgn)
-    const formattedPgn = arrayPgn.map((eachMove) => ({
-      white: eachMove[0] && eachMove[0] !== "..." ? eachMove[0] : null,
-      black: eachMove[1] || null,
-    }));
-
-    return formattedPgn;
-};
-
-// const getOrientation = (puzzleData: PuzzleData) => {
-//   return puzzleData.fen.includes('w') ? WHITE : BLACK;
-// };
 
 const messageReducer = (
   _: unknown,
