@@ -20,13 +20,13 @@ const Analysis = ({data, boardOrientation, anim} : PropType) => {
       const fen = data?.[0]?.fen;
       if (fen) {
         game.load(fen);
-        setCurrentMove({ ...currentMove, currentFen: fen})
+        setCurrentMove(state => ({ ...state, currentFen: fen}));
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data]);
     
     useEffect(() => {
-      setCurrentMove({ ...currentMove, turn: boardOrientation });
+      setCurrentMove(state => ({ ...state, turn: boardOrientation }));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [boardOrientation])
 
