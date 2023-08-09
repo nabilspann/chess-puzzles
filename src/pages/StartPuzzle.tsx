@@ -61,11 +61,12 @@ interface AnnotationAction {
 interface PropType {
   data: PuzzleData[];
   isLoading: boolean;
-  refetch: () => Promise<void>;
+  // refetch: () => Promise<void>;
   boardOrientation: BoardOrientation;
   anim: number;
-  difficulty: Difficulty;
-  setDifficulty: (x: Difficulty) => void;
+  // difficulty: Difficulty;
+  // setDifficulty: (x: Difficulty) => void;
+  nextPage: () => void;
 }
 
 const messageReducer = (
@@ -91,7 +92,7 @@ const messageReducer = (
     case PUZZLE_SOLVED:
       return {
         messageType: PUZZLE_SOLVED,
-        message: "Success! Click on the next puzzle.",
+        message: "Success! You will be taken to the analysis board.",
       };
     default:
       return {
@@ -134,14 +135,12 @@ const annotationReducer = (state: PgnMove[], action: AnnotationAction): PgnMove[
 
 const StartPuzzle = ({
   data,
-  refetch,
   boardOrientation,
   anim,
-  difficulty,
-  setDifficulty
+  nextPage,
 }: PropType) => {
   const [game, setGame] = useState(new Chess());
-  const [ option, setOption ] = useState(difficulty);
+  // const [ option, setOption ] = useState(difficulty);
   //Current move number
   const [ moveCount, setMoveCount ] = useState(0);
   const [annotation, setAnnotation] = useReducer(annotationReducer, []);
@@ -165,18 +164,18 @@ const StartPuzzle = ({
   const formattedPgn = useMemo(() => formatPgn(puzzleData?.pgn || ''), [puzzleData?.pgn]);
   const pgnLength = formattedPgn.length;
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setOption(event.target.value as Difficulty);
-    void ctx.puzzles.getOne.cancel();
-  };
+  // const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setOption(event.target.value as Difficulty);
+  //   void ctx.puzzles.getOne.cancel();
+  // };
 
-  const nextPuzzle = async (): Promise<void> => {
-    await refetch();
-    setDifficulty(option);
+  // const nextPuzzle = async (): Promise<void> => {
+  //   await refetch();
+  //   setDifficulty(option);
 
-    setMoveCount(0);
-    setAnnotation({ type: "reset_board" });
-  };
+  //   setMoveCount(0);
+  //   setAnnotation({ type: "reset_board" });
+  // };
 
   const puzzleLogic = (chessMove: string) => {
     const currentMove = formattedPgn[moveCount];
@@ -201,6 +200,9 @@ const StartPuzzle = ({
             blackMove: chessMove,
           });
         }
+        setTimeout(() => {
+          nextPage();
+        }, 2000)
         return true;
       }
       const nextMove = formattedPgn[moveCount + 1];
@@ -244,15 +246,14 @@ const StartPuzzle = ({
           game={game}
           mutateGame={(newGame) => setGame(newGame)}
         />
-        <div className="py-5">
+        {/* <div className="py-5">
           <SelectOption
             labelText="Select the difficulty"
             selectValue={option}
             handleChange={handleChange}
             options={difficultyOptions}
           />
-          <button onClick={() => void nextPuzzle()}>Next puzzle</button>
-        </div>
+        </div> */}
         <div
           className={`text-center text-2xl font-semibold
           ${messageType === INCORRECT_MOVE ? "text-red-500" : ""}

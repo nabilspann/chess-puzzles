@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { api } from "~/utils/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 import StartPuzzle from "./StartPuzzle";
 import { WHITE } from "~/utils/constants";
@@ -10,30 +10,108 @@ import Analysis from "./Analysis";
 
 export default function Home() {
   const [anim, setAnim] = useState(0);
+  const [settings, setSettings] = useState({queryEnabled: true, difficulty: "easy", displayPage: "StartPuzzle"});
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-  const [boardOrientation, setBoardOrientation] = useState<BoardOrientation>(WHITE);
+  // const [settings, setSettings] = useState<Difficulty>(difficulty);
+  const [boardOrientation, setBoardOrientation] =
+    useState<BoardOrientation>(WHITE);
+  const [displayPage, setDisplayPage] = useState("StartPuzzle");
 
   const { data, isLoading, refetch } = api.puzzles.getOne.useQuery(
-    { difficulty },
+    { difficulty: settings.difficulty },
     {
       refetchOnWindowFocus: false,
+      enabled: settings.queryEnabled,
+      // enabled: false,
+      // refetchOnMount: false,
+      // refetchOnReconnect: false,
+      // cacheTime: 0,
+      // staleTime: 0,
       onSuccess: (data) => {
         if (typeof data?.[0]?.fen === "string") {
+          console.log("sucess??");
           setBoardOrientation(getOrientation(data[0]));
           if (anim === 0) setAnim(300);
+        }
+        if (settings.queryEnabled) {
+          console.log("settings changed??");
+          setSettings((prevSettings) => ({
+            ...prevSettings,
+            queryEnabled: false,
+          }));
         }
       },
     }
   );
- 
-  const refetchQuery = async () => {
-    await refetch();
-  }
+
+  //  const [getOne] = api.useQueries((t) => [
+  //   t.puzzles.getOne({difficulty}, {
+  //     refetchOnWindowFocus: false,
+  //     // enabled: settings.queryEnabled,
+  //     // enabled: false,
+  //     // refetchOnMount: false,
+  //     // refetchOnReconnect: false,
+  //     onSuccess: (data) => {
+  //       if (typeof data?.[0]?.fen === "string") {
+  //         console.log("sucess??");
+  //         setBoardOrientation(getOrientation(data[0]));
+  //         if (anim === 0) setAnim(300);
+  //       }
+  //       // if (settings.queryEnabled) {
+  //       //   console.log("settings changed??");
+  //       //   setSettings((prevSettings) => ({
+  //       //     ...prevSettings,
+  //       //     queryEnabled: false,
+  //       //   }));
+  //       // }
+  //     },
+  //   }),
+  //  ], () => {
+  //   return true;
+  //  });
+  //  const { data, isLoading, refetch } = getOne;
+  useEffect(() => {
+    const fetchData = async () => {
+      await refetch();
+    }
+    if(settings.displayPage === "StartPuzzle") void fetchData();
+  }, [settings.displayPage, refetch]);
+
+  const ctx = api.useContext();
+
+  // const refetchQuery = async () => {
+  //   await refetch();
+  // }
+
+  const nextPuzzle = async () => {
+    console.log("nextPuzzle");
+    // setDisplayPage("StartPuzzle");
+    // await refetch();
+    // setSettings(prevSettings => ({ ...prevSettings, difficulty, displayPage: "StartPuzzle" }));
+    setSettings({
+      ...settings,
+      difficulty,
+      displayPage: "StartPuzzle",
+    });
+
+    // void ctx.puzzles.getOne.cancel();
+
+    // await refetch();
+
+    // setDifficulty(settings);
+  };
+
+  const changeDifficulty = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    // setSettings(event.target.value as Difficulty);
+    setDifficulty(event.target.value as Difficulty);
+    // void ctx.puzzles.getOne.cancel();
+  };
 
   if (isLoading) return <div>Loading</div>;
 
   if (!data || !data[0]) return <div>Something went wrong</div>;
 
+  console.log("data", data);
   return (
     <>
       <Head>
@@ -43,8 +121,28 @@ export default function Home() {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full md:max-w-5xl">
-          {/* <StartPuzzle data={data} isLoading={isLoading} refetch={refetchQuery} boardOrientation={boardOrientation} anim={anim} difficulty={difficulty} setDifficulty={(difficulty: Difficulty) => setDifficulty(difficulty)}/> */}
-          <Analysis data={data} anim={anim} boardOrientation={boardOrientation} />
+          {settings.displayPage === "StartPuzzle" && (
+            <StartPuzzle
+              data={data}
+              isLoading={isLoading}
+              boardOrientation={boardOrientation}
+              anim={anim}
+              // difficulty={difficulty}
+              // nextPage={() => setDisplayPage("Analysis")}
+              nextPage={() => setSettings(prevSettings => ({...prevSettings, displayPage: "Analysis"}))}
+            />
+          )}
+          {settings.displayPage === "Analysis" && (
+            <Analysis
+              data={data}
+              anim={anim}
+              boardOrientation={boardOrientation}
+              nextPage={nextPuzzle}
+              // optionValue={settings}
+              optionValue={difficulty}
+              handleChange={changeDifficulty}
+            />
+          )}
         </div>
       </main>
     </>

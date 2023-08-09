@@ -3,15 +3,34 @@ import { useEffect, useMemo, useState } from "react";
 import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 import Annotation from "~/components/Annotation";
 import ChessBoardComp from "~/components/ChessBoard";
+import SelectOption from "~/components/SelectOption";
 import type { PuzzleData } from "~/interfaces";
 import { WHITE, BLACK } from "~/utils/constants";
 import { formatPgn, makeAMove } from "~/utils/utilFunctions";
 
 interface PropType {
-    data: PuzzleData[];
-    boardOrientation: BoardOrientation;
-    anim: number;
+  data: PuzzleData[];
+  boardOrientation: BoardOrientation;
+  anim: number;
+  nextPage: () => Promise<void>;
+  handleChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  optionValue: string;
 }
+
+const difficultyOptions = [
+  {
+    value: "easy",
+    text: "Easy",
+  },
+  {
+    value: "medium",
+    text: "Medium",
+  },
+  {
+    value: "hard",
+    text: "Hard",
+  },
+];
 
 const getFocusMove = (moveNumber: number, turn: BoardOrientation) => {
   if(moveNumber === 0 && turn === WHITE){
@@ -23,7 +42,7 @@ const getFocusMove = (moveNumber: number, turn: BoardOrientation) => {
   }
 }
 
-const Analysis = ({data, boardOrientation, anim} : PropType) => {
+const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionValue} : PropType) => {
   const [game, setGame] = useState(new Chess());
   const [currentMove, setCurrentMove] = useState({
     moveNumber: 0,
@@ -160,12 +179,24 @@ const Analysis = ({data, boardOrientation, anim} : PropType) => {
           validateMove={checkEachMove}
         />
         <div>
-          <button onClick={handlePreviousMove}>Previous</button>
-          <button onClick={handleNextMove}>Next</button>
+          <div className="py-5">
+            <SelectOption
+              labelText="Select the difficulty"
+              selectValue={optionValue}
+              handleChange={handleChange}
+              options={difficultyOptions}
+            />
+          </div>
+          <button onClick={() => void nextPage()}>Next Puzzle</button>
+          {/* <button onClick={handlePreviousMove}>Previous</button>
+          <button onClick={handleNextMove}>Next</button> */}
         </div>
       </div>
       <div className="h-full max-md:py-10 md:col-span-2">
-        <Annotation pgn={formattedPgn} focusMove={getFocusMove(currentMove.moveNumber, currentMove.turn)}/>
+        <Annotation
+          pgn={formattedPgn}
+          focusMove={getFocusMove(currentMove.moveNumber, currentMove.turn)}
+        />
       </div>
     </div>
   );
