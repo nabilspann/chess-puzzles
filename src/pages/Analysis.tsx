@@ -12,7 +12,7 @@ interface PropType {
   data: PuzzleData[];
   boardOrientation: BoardOrientation;
   anim: number;
-  nextPage: () => Promise<void>;
+  nextPage: () => void;
   handleChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   optionValue: string;
 }
