@@ -1,28 +1,11 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import ChessBoardComp from "~/components/ChessBoard"
-import { type RouterOutputs, api } from "~/utils/api";
-import SelectOption from "~/components/SelectOption";
-import type { Difficulty } from "~/interfaces";
+import { type RouterOutputs } from "~/utils/api";
 import { WHITE, BLACK } from "~/utils/constants";
 import Annotation from "~/components/Annotation";
 import { Chess } from "chess.js";
 import { makeAMove, formatPgn } from "~/utils/utilFunctions";
 import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
-
-const difficultyOptions = [
-  {
-    value: "easy",
-    text: "Easy",
-  },
-  {
-    value: "medium",
-    text: "Medium",
-  },
-  {
-    value: "hard",
-    text: "Hard",
-  },
-];
 
 type PuzzleData = RouterOutputs["puzzles"]["getOne"][number];
 
@@ -158,8 +141,6 @@ const StartPuzzle = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardOrientation, data]);
 
-  const ctx = api.useContext();
-
   const puzzleData = data?.[0];
   const formattedPgn = useMemo(() => formatPgn(puzzleData?.pgn || ''), [puzzleData?.pgn]);
   const pgnLength = formattedPgn.length;
@@ -246,14 +227,14 @@ const StartPuzzle = ({
           game={game}
           mutateGame={(newGame) => setGame(newGame)}
         />
-        {/* <div className="py-5">
-          <SelectOption
-            labelText="Select the difficulty"
-            selectValue={option}
-            handleChange={handleChange}
-            options={difficultyOptions}
-          />
-        </div> */}
+        <div className="text-center p-3">
+          <button
+            className="border-2 border-red-300 p-2 font-mono text-lg font-semibold text-red-600"
+            onClick={nextPage}
+          >
+            Reveal the answer
+          </button>
+        </div>
         <div
           className={`text-center text-2xl font-semibold
           ${messageType === INCORRECT_MOVE ? "text-red-500" : ""}

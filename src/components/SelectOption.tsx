@@ -13,16 +13,16 @@ interface PropTypes {
 const SelectOption = ({ options, labelText, selectValue, handleChange}: PropTypes) => {
     return (
       <>
-        <label>{labelText}</label>
+        <label className="font-serif">{labelText}</label>
         <select
           value={selectValue}
           onChange={handleChange}
-          className="grow bg-transparent pl-3 outline-none"
+          className="ml-3 grow border-2 bg-transparent p-3 pl-3 font-semibold outline-none"
         >
           {options.map((option) => (
             <option
               key={option.value}
-              className="text-black"
+              className="bg-white text-black"
               value={option.value}
             >
               {option.text}

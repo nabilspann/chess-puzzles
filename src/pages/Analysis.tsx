@@ -7,6 +7,7 @@ import SelectOption from "~/components/SelectOption";
 import type { PuzzleData } from "~/interfaces";
 import { WHITE, BLACK } from "~/utils/constants";
 import { formatPgn, makeAMove } from "~/utils/utilFunctions";
+import { LeftArrow, RightArrow } from "~/components/Arrows";
 
 interface PropType {
   data: PuzzleData[];
@@ -187,9 +188,12 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
               options={difficultyOptions}
             />
           </div>
-          <button onClick={() => void nextPage()}>Next Puzzle</button>
-          {/* <button onClick={handlePreviousMove}>Previous</button>
-          <button onClick={handleNextMove}>Next</button> */}
+          <button
+            className="border-2 border-lime-300 font-mono text-lg font-semibold p-2 text-lime-300"
+            onClick={() => void nextPage()}
+          >
+            Next Puzzle!
+          </button>
         </div>
       </div>
       <div className="h-full max-md:py-10 md:col-span-2">
@@ -197,6 +201,14 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
           pgn={formattedPgn}
           focusMove={getFocusMove(currentMove.moveNumber, currentMove.turn)}
         />
+        <div className="flex justify-between pt-5">
+          <button onClick={handlePreviousMove}>
+            <LeftArrow size={50} />
+          </button>
+          <button onClick={handleNextMove}>
+            <RightArrow size={50} />
+          </button>
+        </div>
       </div>
     </div>
   );

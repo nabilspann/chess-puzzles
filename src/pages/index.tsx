@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { api } from "~/utils/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { BoardOrientation } from "react-chessboard/dist/chessboard/types";
 import StartPuzzle from "./StartPuzzle";
 import { WHITE } from "~/utils/constants";
@@ -13,22 +13,18 @@ interface Settings {
   displayPage: string;
   boardOrientation: BoardOrientation
 }
+
 export default function Home() {
   const [anim, setAnim] = useState(0);
-  const [settings, setSettings] = useState({difficulty: "easy", displayPage: "StartPuzzle", boardOrientation: WHITE});
+  const [settings, setSettings] = useState<Settings>({difficulty: "easy", displayPage: "StartPuzzle", boardOrientation: WHITE});
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-  // const [settings, setSettings] = useState<Difficulty>(difficulty);
-  const [boardOrientation, setBoardOrientation] =
-    useState<BoardOrientation>(WHITE);
-  const [displayPage, setDisplayPage] = useState("StartPuzzle");
 
-  const { data, isLoading, refetch, remove } = api.puzzles.getOne.useQuery(
+  const { data, isLoading, remove } = api.puzzles.getOne.useQuery(
     { difficulty: settings.difficulty },
     {
       refetchOnWindowFocus: false,
       onSuccess: (data) => {
         if (typeof data?.[0]?.fen === "string") {
-          // setBoardOrientation(getOrientation(data[0]));
           const boardOrientation = getOrientation(data[0]);
           setSettings(prevSettings => ({...prevSettings, boardOrientation }));
           if (anim === 0) setAnim(300);
@@ -37,76 +33,26 @@ export default function Home() {
     }
   );
 
-  //  const [getOne] = api.useQueries((t) => [
-  //   t.puzzles.getOne({difficulty}, {
-  //     refetchOnWindowFocus: false,
-  //     // enabled: settings.queryEnabled,
-  //     // enabled: false,
-  //     // refetchOnMount: false,
-  //     // refetchOnReconnect: false,
-  //     onSuccess: (data) => {
-  //       if (typeof data?.[0]?.fen === "string") {
-  //         console.log("sucess??");
-  //         setBoardOrientation(getOrientation(data[0]));
-  //         if (anim === 0) setAnim(300);
-  //       }
-  //       // if (settings.queryEnabled) {
-  //       //   console.log("settings changed??");
-  //       //   setSettings((prevSettings) => ({
-  //       //     ...prevSettings,
-  //       //     queryEnabled: false,
-  //       //   }));
-  //       // }
-  //     },
-  //   }),
-  //  ], () => {
-  //   return true;
-  //  });
-  //  const { data, isLoading, refetch } = getOne;
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     await refetch();
-  //   }
-  //   if(settings.displayPage === "StartPuzzle") void fetchData();
-  // }, [settings.displayPage, refetch]);
-
   const ctx = api.useContext();
 
-  // const refetchQuery = async () => {
-  //   await refetch();
-  // }
-
   const nextPuzzle = () => {
-    console.log("nextPuzzle");
-    // setDisplayPage("StartPuzzle");
-    // await refetch();
     void ctx.puzzles.getOne.cancel();
     remove();
-    // setSettings(prevSettings => ({ ...prevSettings, difficulty, displayPage: "StartPuzzle" }));
-    setSettings({
-      ...settings,
+    setSettings(prevSettings => ({
+      ...prevSettings,
       difficulty,
       displayPage: "StartPuzzle",
-    });
-
-    // void ctx.puzzles.getOne.cancel();
-
-    // await refetch();
-
-    // setDifficulty(settings);
+    }));
   };
 
   const changeDifficulty = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    // setSettings(event.target.value as Difficulty);
     setDifficulty(event.target.value as Difficulty);
-    // void ctx.puzzles.getOne.cancel();
   };
 
   if (isLoading) return <div>Loading</div>;
 
   if (!data || !data[0]) return <div>Something went wrong</div>;
 
-  console.log("data", data);
   return (
     <>
       <Head>
@@ -122,8 +68,6 @@ export default function Home() {
               isLoading={isLoading}
               boardOrientation={settings.boardOrientation}
               anim={anim}
-              // difficulty={difficulty}
-              // nextPage={() => setDisplayPage("Analysis")}
               nextPage={() => setSettings(prevSettings => ({...prevSettings, displayPage: "Analysis"}))}
             />
           )}
@@ -133,7 +77,6 @@ export default function Home() {
               anim={anim}
               boardOrientation={settings.boardOrientation}
               nextPage={nextPuzzle}
-              // optionValue={settings}
               optionValue={difficulty}
               handleChange={changeDifficulty}
             />
