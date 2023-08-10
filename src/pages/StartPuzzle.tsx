@@ -123,7 +123,6 @@ const StartPuzzle = ({
   nextPage,
 }: PropType) => {
   const [game, setGame] = useState(new Chess());
-  // const [ option, setOption ] = useState(difficulty);
   //Current move number
   const [ moveCount, setMoveCount ] = useState(0);
   const [annotation, setAnnotation] = useReducer(annotationReducer, []);
@@ -144,19 +143,6 @@ const StartPuzzle = ({
   const puzzleData = data?.[0];
   const formattedPgn = useMemo(() => formatPgn(puzzleData?.pgn || ''), [puzzleData?.pgn]);
   const pgnLength = formattedPgn.length;
-
-  // const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setOption(event.target.value as Difficulty);
-  //   void ctx.puzzles.getOne.cancel();
-  // };
-
-  // const nextPuzzle = async (): Promise<void> => {
-  //   await refetch();
-  //   setDifficulty(option);
-
-  //   setMoveCount(0);
-  //   setAnnotation({ type: "reset_board" });
-  // };
 
   const puzzleLogic = (chessMove: string) => {
     const currentMove = formattedPgn[moveCount];
@@ -246,6 +232,7 @@ const StartPuzzle = ({
       </div>
       <div className="h-full max-md:py-10 md:col-span-2">
         <Annotation pgn={annotation} />
+        <div className="pt-5">Puzzle difficulty: {puzzleData?.difficulty}</div>
       </div>
     </div>
   );
