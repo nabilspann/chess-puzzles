@@ -75,12 +75,17 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
   const handleNextMove = () => {
     const pushMove = formattedPgn?.[currentMove.moveNumber]?.[currentMove.turn];
     const gameFen = game.fen();
-
-    if (pushMove && currentMove.moveNumber < pgnLength) {
+    console.log("gameFen", gameFen);
+    console.log("currentMove.currentFen", currentMove.currentFen);
+    if (
+      pushMove &&
+      currentMove.moveNumber < pgnLength &&
+      gameFen === currentMove.currentFen
+    ) {
       const { gameCopy } = makeAMove(pushMove, game);
 
       setGame(gameCopy);
-      if (currentMove.turn === WHITE && gameFen === currentMove.currentFen) {
+      if (currentMove.turn === WHITE) {
         setCurrentMove((curMove) => ({
           ...curMove,
           turn: BLACK,
@@ -88,8 +93,7 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
         }));
       } else if (
         currentMove.turn === BLACK &&
-        currentMove.moveNumber < pgnLength &&
-        gameFen === currentMove.currentFen
+        currentMove.moveNumber < pgnLength
       ) {
         setCurrentMove((curMove) => ({
           ...curMove,
