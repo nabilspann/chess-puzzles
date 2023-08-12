@@ -167,9 +167,7 @@ const StartPuzzle = ({
             blackMove: chessMove,
           });
         }
-        setTimeout(() => {
-          nextPage();
-        }, 2000)
+        nextPage();
         return true;
       }
       const nextMove = formattedPgn[moveCount + 1];
@@ -204,8 +202,8 @@ const StartPuzzle = ({
 
   const { message, messageType } = puzzleMessage;
   return (
-    <div className="p-5 pt-10 md:grid md:grid-cols-6">
-      <div className="md:col-span-4 md:px-5">
+    <div className="md:grid md:grid-cols-6">
+      <div className="md:col-span-4 md:pr-5">
         <ChessBoardComp
           validateMove={puzzleLogic}
           boardOrientation={boardOrientation}
@@ -213,7 +211,7 @@ const StartPuzzle = ({
           game={game}
           mutateGame={(newGame) => setGame(newGame)}
         />
-        <div className="text-center p-3">
+        <div className="p-3 text-center">
           <button
             className="border-2 border-red-300 p-2 font-mono text-lg font-semibold text-red-600"
             onClick={nextPage}
@@ -231,6 +229,7 @@ const StartPuzzle = ({
         </div>
       </div>
       <div className="h-full max-md:py-10 md:col-span-2">
+        {/* <div className="pb-5 text-xl font-semibold">Current Puzzle:</div> */}
         <Annotation pgn={annotation} />
         <div className="pt-5">Puzzle difficulty: {puzzleData?.difficulty}</div>
       </div>

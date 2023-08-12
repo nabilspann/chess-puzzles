@@ -170,8 +170,8 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
   };
 
   return (
-    <div className="p-5 pt-10 md:grid md:grid-cols-6">
-      <div className="md:col-span-4 md:px-5">
+    <div className="md:grid md:grid-cols-6">
+      <div className="md:col-span-4 md:pr-5">
         <ChessBoardComp
           boardOrientation={boardOrientation}
           animation={anim}
@@ -189,7 +189,7 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
             />
           </div>
           <button
-            className="border-2 border-lime-300 font-mono text-lg font-semibold p-2 text-lime-300"
+            className="border-2 border-lime-300 p-2 font-mono text-lg font-semibold text-lime-300"
             onClick={() => void nextPage()}
           >
             Next Puzzle!
@@ -197,6 +197,7 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
         </div>
       </div>
       <div className="h-full max-md:py-10 md:col-span-2">
+        {/* <div className="pb-5 text-xl font-semibold">Analysis:</div> */}
         <Annotation
           pgn={formattedPgn}
           focusMove={getFocusMove(currentMove.moveNumber, currentMove.turn)}

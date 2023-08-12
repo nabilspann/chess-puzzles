@@ -14,9 +14,9 @@ export const LeftArrow = ({size}: PropType) => {
         <path
           d="M15 7L10 12L15 17"
           stroke="#FFFFFF"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </svg>
     );
@@ -34,9 +34,9 @@ export const RightArrow = ({ size }: PropType) => {
       <path
         d="M10 7L15 12L10 17"
         stroke="#FFFFFF"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
