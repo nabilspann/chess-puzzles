@@ -183,8 +183,8 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
           mutateGame={(newGame) => setGame(newGame)}
           validateMove={checkEachMove}
         />
-        <div>
-          <div className="py-5">
+        <div className="flex flex-wrap justify-center pt-5">
+          <div>
             <SelectOption
               labelText="Select the difficulty"
               selectValue={optionValue}
@@ -193,7 +193,7 @@ const Analysis = ({data, boardOrientation, anim, nextPage, handleChange, optionV
             />
           </div>
           <button
-            className="border-2 border-lime-300 p-2 font-mono text-lg font-semibold text-lime-300"
+            className="border-2 border-lime-300 p-2 font-mono text-lg font-semibold text-lime-300 md:ml-5 max-md:mt-5"
             onClick={() => void nextPage()}
           >
             Next Puzzle!
